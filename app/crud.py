@@ -8,10 +8,8 @@ import uuid
 # Password hashing setup
 pwd_context = CryptContext(
     schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__use_builtin_backend=True
+    deprecated="auto"
 )
-
 
 # -----------------------------
 # Calculation CRUD
