@@ -7,7 +7,7 @@ import uuid
 
 # Password hashing setup
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
+    schemes=["bcrypt_sha256"],  # bcrypt_sha256 allows longer passwords
     deprecated="auto"
 )
 
