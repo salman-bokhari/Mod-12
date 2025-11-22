@@ -6,8 +6,13 @@ from passlib.context import CryptContext
 import uuid
 
 # Password hashing setup
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__ident="2b",     # stable ident
+    bcrypt__rounds=12,      # default
+    bcrypt__variant="bcrypt" # <-- IMPORTANT: avoids the GitHub Actions wrap-bug detection
+)
 
 # -----------------------------
 # Calculation CRUD
