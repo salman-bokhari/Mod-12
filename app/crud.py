@@ -9,10 +9,9 @@ import uuid
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
-    bcrypt__ident="2b",     # stable ident
-    bcrypt__rounds=12,      # default
-    bcrypt__variant="bcrypt" # <-- IMPORTANT: avoids the GitHub Actions wrap-bug detection
+    bcrypt__use_builtin_backend=True
 )
+
 
 # -----------------------------
 # Calculation CRUD
