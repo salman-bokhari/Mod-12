@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, Float, String, ForeignKey
+from sqlalchemy import Column, Integer, Float, String, ForeignKey, DateTime
 from sqlalchemy.orm import declarative_base, relationship
+from datetime import datetime
 
 Base = declarative_base()
 
@@ -10,12 +11,11 @@ class Calculation(Base):
     b = Column(Float, nullable=False)
     op_type = Column(String(20), nullable=False)  # 'Add','Sub','Multiply','Divide'
     result = Column(Float, nullable=True)
-    # Example optional FK:
-    # user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
-    # user = relationship('User', backref='calculations')
+
+    # IMPORTANT: Enable FK for ownership
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     def compute(self):
-        # compute on demand as well (not used when result stored)
         if self.op_type == 'Add':
             return self.a + self.b
         if self.op_type == 'Sub':
@@ -26,4 +26,18 @@ class Calculation(Base):
             if self.b == 0:
                 raise ZeroDivisionError("Division by zero")
             return self.a / self.b
-        raise ValueError('Unknown operation')
+        raise ValueError("Unknown operation")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=True)
+    hashed_password = Column(String(255), nullable=False)
+    token = Column(String(128), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationship: user → list of calculations
+    calculations = relationship("Calculation", backref="user")

@@ -1,5 +1,7 @@
 from enum import Enum
 from pydantic import BaseModel, field_validator, model_validator
+from typing import Optional
+
 
 class OpType(str, Enum):
     Add = "Add"
@@ -26,3 +28,22 @@ class CalculationRead(BaseModel):
     result: float
 
     model_config = {"from_attributes": True}
+
+class UserCreate(BaseModel):
+    username: str
+    email: Optional[str] = None
+    password: str
+
+class UserRead(BaseModel):
+    id: int
+    username: str
+    email: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class TokenResponse(BaseModel):
+    token: str
