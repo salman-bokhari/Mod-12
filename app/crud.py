@@ -52,9 +52,10 @@ def get_user_by_username(db: Session, username: str):
     )
 
 def create_user(db: Session, user_create: "UserCreate"):
-    # Truncate password to 72 bytes for bcrypt
-    pwd_to_hash = user_create.password[:72]
-    hashed = pwd_context.hash(pwd_to_hash)
+    # Ensure password is bytes and truncate to 72 bytes
+    pwd_bytes = user_create.password.encode("utf-8")[:72]
+    hashed = pwd_context.hash(pwd_bytes)
+    
     u = models.User(
         username=user_create.username,
         email=user_create.email,
