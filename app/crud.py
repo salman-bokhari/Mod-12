@@ -51,22 +51,19 @@ def get_user_by_username(db: Session, username: str):
         .first()
     )
 
-
-def create_user(db: Session, user_create: UserCreate):
-    # Hash the raw password directly (fixes test failure)
-    hashed_password = pwd_context.hash(user_create.password)
-
-    user = models.User(
+def create_user(db: Session, user_create: "UserCreate"):
+    # Truncate password to 72 bytes for bcrypt
+    pwd_to_hash = user_create.password[:72]
+    hashed = pwd_context.hash(pwd_to_hash)
+    u = models.User(
         username=user_create.username,
         email=user_create.email,
-        hashed_password=hashed_password
+        hashed_password=hashed
     )
-
-    db.add(user)
+    db.add(u)
     db.commit()
-    db.refresh(user)
-    return user
-
+    db.refresh(u)
+    return u
 
 def authenticate_user(db: Session, username: str, password: str):
     user = get_user_by_username(db, username)
