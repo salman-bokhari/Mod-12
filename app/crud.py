@@ -6,7 +6,6 @@ from passlib.context import CryptContext
 import uuid
 
 pwd_context = CryptContext(schemes=["bcrypt_sha256"])
-pwd_context.hash("secret")
 
 # -----------------------------
 # Calculation CRUD
