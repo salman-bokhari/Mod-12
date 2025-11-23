@@ -48,9 +48,9 @@ def get_user_by_username(db: Session, username: str):
     )
 
 def create_user(db: Session, user_create: "UserCreate"):
-    pwd_bytes = user_create.password.encode("utf-8")[:72]  # truncate safely
-    hashed = pwd_context.hash(pwd_bytes)
-    
+    # bcrypt_sha256 expects a STRING, not bytes, and handles length internally
+    hashed = pwd_context.hash(user_create.password)
+
     u = models.User(
         username=user_create.username,
         email=user_create.email,
@@ -60,6 +60,7 @@ def create_user(db: Session, user_create: "UserCreate"):
     db.commit()
     db.refresh(u)
     return u
+
 
 def authenticate_user(db: Session, username: str, password: str):
     user = get_user_by_username(db, username)
