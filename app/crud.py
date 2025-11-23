@@ -6,10 +6,10 @@ from passlib.context import CryptContext
 import uuid
 
 # ------------------------------------------------------------------------
-# Password hashing (simple, stable, and works in GitHub Actions)
+# Use a stable, dependency-free hashing scheme: pbkdf2_sha256
 # ------------------------------------------------------------------------
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
+    schemes=["pbkdf2_sha256"],
     deprecated="auto"
 )
 
@@ -24,8 +24,7 @@ def create_calculation(db: Session, payload: CalculationCreate, persist_result: 
     )
 
     op = OperationFactory.get_operation(calc.op_type)
-    result = op.compute(calc.a, calc.b)
-    calc.result = result
+    calc.result = op.compute(calc.a, calc.b)
 
     if persist_result:
         db.add(calc)
@@ -55,9 +54,7 @@ def get_user_by_username(db: Session, username: str):
 
 
 def create_user(db: Session, user_create: UserCreate):
-    # bcrypt supports max 72 bytes → truncate to be safe
-    pwd_to_hash = user_create.password[:72]
-    hashed_password = pwd_context.hash(pwd_to_hash)
+    hashed_password = pwd_context.hash(user_create.password)
 
     user = models.User(
         username=user_create.username,
@@ -68,6 +65,7 @@ def create_user(db: Session, user_create: UserCreate):
     db.add(user)
     db.commit()
     db.refresh(user)
+
     return user
 
 
@@ -76,10 +74,7 @@ def authenticate_user(db: Session, username: str, password: str):
     if not user:
         return None
 
-    # truncate provided password too
-    pwd_to_verify = password[:72]
-
-    if not pwd_context.verify(pwd_to_verify, user.hashed_password):
+    if not pwd_context.verify(password, user.hashed_password):
         return None
 
     return user
