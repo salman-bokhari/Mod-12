@@ -5,18 +5,24 @@ from .schemas import CalculationCreate, UserCreate
 from passlib.context import CryptContext
 import uuid
 
-pwd_context = CryptContext(schemes=["bcrypt_sha256"])
+# ------------------------------------------------------------------------
+# Password hashing (simple, stable, and works in GitHub Actions)
+# ------------------------------------------------------------------------
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
-# -----------------------------
+# ------------------------------------------------------------------------
 # Calculation CRUD
-# -----------------------------
+# ------------------------------------------------------------------------
 def create_calculation(db: Session, payload: CalculationCreate, persist_result: bool = True):
     calc = models.Calculation(
         a=payload.a,
         b=payload.b,
         op_type=payload.op_type.value
     )
-    
+
     op = OperationFactory.get_operation(calc.op_type)
     result = op.compute(calc.a, calc.b)
     calc.result = result
@@ -37,9 +43,9 @@ def get_calculation(db: Session, calc_id: int):
     )
 
 
-# -----------------------------
+# ------------------------------------------------------------------------
 # User CRUD + Auth
-# -----------------------------
+# ------------------------------------------------------------------------
 def get_user_by_username(db: Session, username: str):
     return (
         db.query(models.User)
@@ -47,19 +53,22 @@ def get_user_by_username(db: Session, username: str):
         .first()
     )
 
-def create_user(db: Session, user_create: "UserCreate"):
-    # bcrypt_sha256 expects a STRING, not bytes, and handles length internally
-    hashed = pwd_context.hash(user_create.password)
 
-    u = models.User(
+def create_user(db: Session, user_create: UserCreate):
+    # bcrypt supports max 72 bytes → truncate to be safe
+    pwd_to_hash = user_create.password[:72]
+    hashed_password = pwd_context.hash(pwd_to_hash)
+
+    user = models.User(
         username=user_create.username,
         email=user_create.email,
-        hashed_password=hashed
+        hashed_password=hashed_password,
     )
-    db.add(u)
+
+    db.add(user)
     db.commit()
-    db.refresh(u)
-    return u
+    db.refresh(user)
+    return user
 
 
 def authenticate_user(db: Session, username: str, password: str):
@@ -67,7 +76,10 @@ def authenticate_user(db: Session, username: str, password: str):
     if not user:
         return None
 
-    if not pwd_context.verify(password, user.hashed_password):
+    # truncate provided password too
+    pwd_to_verify = password[:72]
+
+    if not pwd_context.verify(pwd_to_verify, user.hashed_password):
         return None
 
     return user
@@ -75,7 +87,6 @@ def authenticate_user(db: Session, username: str, password: str):
 
 def create_user_token(db: Session, user: models.User):
     token = str(uuid.uuid4())
-
     user.token = token
 
     db.add(user)
