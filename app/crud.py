@@ -5,11 +5,8 @@ from .schemas import CalculationCreate, UserCreate
 from passlib.context import CryptContext
 import uuid
 
-# Password hashing setup
-pwd_context = CryptContext(
-    schemes=["bcrypt_sha256"],  # bcrypt_sha256 allows longer passwords
-    deprecated="auto"
-)
+pwd_context = CryptContext(schemes=["bcrypt_sha256"])
+pwd_context.hash("secret")
 
 # -----------------------------
 # Calculation CRUD
